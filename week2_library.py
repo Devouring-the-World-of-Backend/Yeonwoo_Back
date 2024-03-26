@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Query
 from pydantic import BaseModel, validator
 from typing import List, Dict, Optional
 from datetime import datetime
@@ -82,11 +82,22 @@ def search_book(title:str=None, author:str=None, published_year:int=None):
             result_books.append(book)
     return result_books
 
-#도서 필터링 기능
+#도서 필터링 기능-년도별=>다중 필터링 기능
 @app.get("/books/filter/",response_model=List[Book])
-def filter_books(published_year:int):
-    filtered_books=[book for book in fake_db.values() if book.published_year==published_year]
+def filter_books(title: Optional[str] = None, author: Optional[str] = None, published_year: Optional[int] = None):
+    filtered_books = []
+    for book in fake_db.values():
+        if (title is None or book.title==title) and (author is None or book.author==author) and (published_year is None or book.published_year==published_year):
+            filtered_books.append(book)
     return filtered_books
+
+#정렬 기능  **Query 매개변수 활용**
+@app.get("/books/sort/",response_model=List[Book])
+def sort_books(field: str = Query(..., description="정렬할 필드 (title, author, published_year)"), order: str = Query("asc", description="정렬 순서 (asc 또는 desc)")):
+    if field not in {"title", "author", "published_year"}:
+        raise HTTPException(status_code=400, detail="Invalid sorting field.")
+    sorted_books = sorted(fake_db.values(), key=lambda x: getattr(x, field), reverse=(order == "desc"))
+    return sorted_books
 
 #예외 처리
 @app.exception_handler(Exception)
