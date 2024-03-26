@@ -28,27 +28,37 @@ class Book(BaseModel):
     def from_user(cls,book_data):
         return cls(**book_data)
 
+#사용자 정의 예외 클래스   
+class UserdefinedERR(Exception):
+    def __init__(self, book_id: int):
+        self.book_id=book_id
+        self.message=f"Book with ID {book_id} not found."
+        super().__init__(self.message)
 
 fake_db: Dict[int,Book]={}
 
-@app.post("/books/",response_model=Book,status_code=status.HTTP_201_CREATED)    #새로운 도서 추가
+#새로운 도서 추가
+@app.post("/books/",response_model=Book,status_code=status.HTTP_201_CREATED)    
 def create_book(book:Book):
     if book.id in fake_db:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail="Book ID already exists.")
     fake_db[book.id]=book
     return book
 
-@app.get("/books/", response_model=List[Book])  #모든 도서 목록
+#모든 도서 목록
+@app.get("/books/", response_model=List[Book])  
 def all_books():
     return list(fake_db.values())
 
-@app.get("/books/{id}", response_model=Book)    #도서 검색
+#도서 검색
+@app.get("/books/{id}", response_model=Book)    
 def read_book(id:int):
     if id not in fake_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found.")
     return fake_db[id]
 
-@app.put("/books/{id}", response_model=Book)     #도서 정보 업데이트
+#도서 정보 업데이트
+@app.put("/books/{id}", response_model=Book)     
 def update_book(id:int, book_data:dict):
     if id not in fake_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found.")
@@ -56,14 +66,16 @@ def update_book(id:int, book_data:dict):
     fake_db[id]=updated_book
     return updated_book
 
-@app.delete("/books/{id}")      #특정 도서 삭제
+#특정 도서 삭제
+@app.delete("/books/{id}")      
 def delete_book(id:int):
     if id not in fake_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found.")
     del fake_db[id]
     return {"message": "Book deleted successfully."}
 
-@app.get("/books/search", response_model=List[Book])        #도서 검색
+#도서 검색
+@app.get("/books/search", response_model=List[Book])        
 def search_book(title:str=None, author:str=None, published_year:int=None):
     result_books=[]
     for book in fake_db.values():
@@ -76,6 +88,14 @@ def search_book(title:str=None, author:str=None, published_year:int=None):
 async def validation_exception_handler(request,exc):
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"message":"Internal server error."}
+    )
+
+#전역 예외 핸들러
+@app.exception_handler(UserdefinedERR)
+async def exception_error(request,exc):
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"message":exc.message}
     )
 
 #test create book
