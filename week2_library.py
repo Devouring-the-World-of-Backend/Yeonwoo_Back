@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, validator
-from typing import List, Dict
+from typing import List, Dict, Optional
 from datetime import datetime
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient #테스트클라이언트 객체 사용해 테스트
@@ -81,6 +81,12 @@ def search_book(title:str=None, author:str=None, published_year:int=None):
         if (title is None or book.title==title) and (author is None or book.author==author) and (published_year is None or book.published_year==published_year):
             result_books.append(book)
     return result_books
+
+#도서 필터링 기능
+@app.get("/books/filter/",response_model=List[Book])
+def filter_books(published_year:int):
+    filtered_books=[book for book in fake_db.values() if book.published_year==published_year]
+    return filtered_books
 
 #예외 처리
 @app.exception_handler(Exception)
