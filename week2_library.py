@@ -4,12 +4,11 @@ from typing import List, Dict
 from datetime import datetime
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient #테스트클라이언트 객체 사용해 테스트
-#from src.api.main import app  #httpx import
-
-#client=TestClient(app)
-client=TestClient()
 
 app=FastAPI()
+
+client=TestClient(app)
+
 
 class Book(BaseModel):
     id: int
