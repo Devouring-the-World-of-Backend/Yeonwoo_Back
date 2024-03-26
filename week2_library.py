@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, status, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, validator
 from typing import List, Dict, Optional
 from datetime import datetime
@@ -8,6 +9,17 @@ from fastapi.testclient import TestClient #테스트클라이언트 객체 사�
 app=FastAPI()
 
 client=TestClient(app)
+
+#특정 도메인 허용(문제 예)
+origins=["https://example-fronted.com"]     
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
 
 
 class Book(BaseModel):
