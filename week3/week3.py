@@ -62,6 +62,13 @@ class Rent(Base):
 User.rent=relationship("Rent",back_populates="user")
 Book.rent=relationship("Rent", back_populates="book")
 
+
+book_category=Table('book_category',Base.metadata,Column('book_id',Integer,ForeignKey('books.id'),Column('category_id',Integer,ForeignKey('categories.id'))))
+
+#make table with metadata
+Base.metadata.create_all(async_engine)
+
+#비동기로 도서 목록 조회하는 API 엔드포인트 추가
 #@app.get("/books/",response_model=List[Book])
 #async def get_books():
 
@@ -99,7 +106,5 @@ if deletebook:
     session.delete(deletebook)
     session.commit()   
 
-book_category=Table('book_category',Base.metadata,Column('book_id',Integer,ForeignKey('books.id'),Column('category_id',Integer,ForeignKey('categories.id'))))
-
-Base.metadata.create_all(async_engine)
+session.commit()
 
